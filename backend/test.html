@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storyzam API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 32px;
+            font-size: 16px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 24px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-quick {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result {
+            display: none;
+            margin-top: 24px;
+            padding: 24px;
+            background: #f8f9ff;
+            border-radius: 12px;
+        }
+        
+        .result.active {
+            display: block;
+        }
+        
+        .song-info {
+            margin-bottom: 24px;
+        }
+        
+        .song-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .song-artist {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        
+        .song-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .detail-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        
+        .links {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .link-btn {
+            flex: 1;
+            padding: 10px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .link-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .analysis {
+            margin-top: 24px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+        }
+        
+        .analysis h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+        
+        .analysis-text {
+            line-height: 1.8;
+            color: #555;
+            white-space: pre-wrap;
+        }
+        
+        .error {
+            display: none;
+            padding: 16px;
+            background: #fee;
+            border: 2px solid #fcc;
+            border-radius: 8px;
+            color: #c33;
+            margin-top: 16px;
+        }
+        
+        .error.active {
+            display: block;
+        }
+        
+        .file-name {
+            margin-top: 12px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .endpoint-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .endpoint-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .endpoint-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎵 Storyzam API Tester</h1>
+            <p class="subtitle">Upload an audio file to recognize the song and get its story</p>
+            
+            <div class="endpoint-toggle">
+                <button class="endpoint-btn active" data-endpoint="recognize">
+                    Full Analysis (Slower)
+                </button>
+                <button class="endpoint-btn" data-endpoint="identify">
+                    Quick Summary (Faster)
+                </button>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">🎤</div>
+                <h3>Drop audio file here or click to browse</h3>
+                <p style="color: #999; margin-top: 8px;">Supports MP3, WAV, AAC, M4A, FLAC (max 10MB)</p>
+                <input type="file" id="audioFile" accept="audio/*">
+                <div class="file-name" id="fileName"></div>
+            </div>
+            
+            <button class="btn" id="recognizeBtn" disabled>Recognize Song</button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing your audio... This may take a few seconds</p>
+            </div>
+            
+            <div class="error" id="error"></div>
+            
+            <div class="result" id="result">
+                <div class="song-info">
+                    <div class="song-title" id="songTitle"></div>
+                    <div class="song-artist" id="songArtist"></div>
+                    
+                    <div class="song-details" id="songDetails"></div>
+                    
+                    <div class="links" id="links"></div>
+                </div>
+                
+                <div class="analysis" id="analysis"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let selectedFile = null;
+        let selectedEndpoint = 'recognize';
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('audioFile');
+        const fileName = document.getElementById('fileName');
+        const recognizeBtn = document.getElementById('recognizeBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+        
+        // Endpoint toggle
+        document.querySelectorAll('.endpoint-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedEndpoint = btn.dataset.endpoint;
+            });
+        });
+        
+        // Click to upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+        
+        function handleFile(file) {
+            if (!file) return;
+            
+            if (!file.type.startsWith('audio/')) {
+                showError('Please select an audio file');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File is too large. Maximum size is 10MB');
+                return;
+            }
+            
+            selectedFile = file;
+            fileName.textContent = `📁 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            recognizeBtn.disabled = false;
+            error.classList.remove('active');
+        }
+        
+        // Recognize song
+        recognizeBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            const formData = new FormData();
+            formData.append('audio', selectedFile);
+            
+            recognizeBtn.disabled = true;
+            loading.classList.add('active');
+            result.classList.remove('active');
+            error.classList.remove('active');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/songs/${selectedEndpoint}`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Recognition failed');
+                }
+                
+                displayResult(data);
+            } catch (err) {
+                showError(err.message || 'Failed to recognize song. Please try again.');
+            } finally {
+                loading.classList.remove('active');
+                recognizeBtn.disabled = false;
+            }
+        });
+        
+        function displayResult(data) {
+            const { song, analysis, summary } = data;
+            
+            document.getElementById('songTitle').textContent = song.title;
+            document.getElementById('songArtist').textContent = song.artist;
+            
+            // Song details
+            const details = document.getElementById('songDetails');
+            details.innerHTML = '';
+            
+            if (song.album) {
+                details.innerHTML += `
+                    <div class="detail-item">
+                        <div class="detail-label">Album</div>
+                        <div>${song.album}</div>
+                    </div>
+                `;
+            }
+            
+            if (song.releaseDate) {
+                details.innerHTML += `
+                    <div class="detail-item">
+                        <div class="detail-label">Release Date</div>
+                        <div>${song.releaseDate}</div>
+                    </div>
+                `;
+            }
+            
+            if (song.genres && song.genres.length > 0) {
+                details.innerHTML += `
+                    <div class="detail-item">
+                        <div class="detail-label">Genres</div>
+                        <div>${song.genres.join(', ')}</div>
+                    </div>
+                `;
+            }
+            
+            if (song.score) {
+                details.innerHTML += `
+                    <div class="detail-item">
+                        <div class="detail-label">Match Confidence</div>
+                        <div>${song.score}%</div>
+                    </div>
+                `;
+            }
+            
+            // Links
+            const links = document.getElementById('links');
+            links.innerHTML = '';
+            
+            if (song.spotify) {
+                links.innerHTML += `<a href="${song.spotify.url}" target="_blank" class="link-btn">🎧 Spotify</a>`;
+            }
+            if (song.youtube) {
+                links.innerHTML += `<a href="${song.youtube.url}" target="_blank" class="link-btn">▶️ YouTube</a>`;
+            }
+            if (song.deezer) {
+                links.innerHTML += `<a href="${song.deezer.url}" target="_blank" class="link-btn">🎵 Deezer</a>`;
+            }
+            
+            // Analysis
+            const analysisDiv = document.getElementById('analysis');
+            if (analysis) {
+                analysisDiv.innerHTML = `
+                    <h3>📖 Story & Analysis</h3>
+                    <div class="analysis-text">${analysis.analysis}</div>
+                `;
+            } else if (summary) {
+                analysisDiv.innerHTML = `
+                    <h3>📝 Quick Summary</h3>
+                    <div class="analysis-text">${summary}</div>
+                `;
+            }
+            
+            result.classList.add('active');
+        }
+        
+        function showError(message) {
+            error.textContent = `❌ ${message}`;
+            error.classList.add('active');
+        }
+        
+        // Test connection on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (!response.ok) {
+                    showError('Cannot connect to API. Make sure the server is running on port 3000.');
+                }
+            } catch (err) {
+                showError('Cannot connect to API. Make sure the server is running on port 3000.');
+            }
+        });
+    </script>
+</body>
+</html>
