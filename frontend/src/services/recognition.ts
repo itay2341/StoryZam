@@ -27,13 +27,15 @@ interface BackendRecognitionResponse {
     success: boolean;
     songTitle: string;
     artist: string;
-    analysis: string;
     structured: {
-      story: string;
-      meaning: string;
-      impact: string;
-      style: string;
-      facts: string;
+      shortSummary: string;
+      storyExplanation: string;
+      themes: string[];
+      emotionalTone: string[];
+      interpretation: string;
+      whyItConnects: string;
+      memorableLine: string;
+      shareCardText: string;
     };
     generatedAt: string;
   };
@@ -68,7 +70,7 @@ export async function recognizeSong(audio: Blob): Promise<RecognizedSong> {
   const result: BackendRecognitionResponse = await response.json();
 
   if (!result.success || !result.found) {
-    throw new Error(result.message || 'Song not found. Try recording a clearer audio sample.');
+    throw new Error('Song not found. Try recording a clearer audio sample.');
   }
 
   // Cache the full result for analysis
