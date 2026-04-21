@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Play, Share2, Sparkles } from "lucide-react";
+import { ArrowLeft, Play, Share2, Sparkles, Languages } from "lucide-react";
 import { Navbar } from "@/components/shared/Navbar";
 import { AuroraBackground } from "@/components/shared/AuroraBackground";
 import { Footer } from "@/components/shared/Footer";
 import { ShareCardModal } from "@/components/result/ShareCardModal";
 import { getMockSongById } from "@/data/mockSongs";
 import type { SongStory } from "@/types/song";
+
+type Language = 'en' | 'he';
 
 const toneColor = (tone: string) => {
   const map: Record<string, string> = {
@@ -29,6 +31,15 @@ const Result = () => {
   const { id = "" } = useParams();
   const [song, setSong] = useState<SongStory | null>(null);
   const [share, setShare] = useState(false);
+  const [language, setLanguage] = useState<Language>('en');
+
+  // Toggle language function
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'he' : 'en');
+  };
+
+  // Get the content based on selected language
+  const content = language === 'he' && song?.he ? song.he : song;
 
   useEffect(() => {
     const stored = sessionStorage.getItem(`storyzam:${id}`);
@@ -58,9 +69,21 @@ const Result = () => {
       <Navbar />
 
       <main className="relative z-10 mx-auto max-w-4xl px-5 pt-8">
-        <Link to="/detect" className="mb-6 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-3.5 w-3.5" /> New Storyzam
-        </Link>
+        <div className="mb-6 flex items-center justify-between">
+          <Link to="/detect" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="h-3.5 w-3.5" /> New Storyzam
+          </Link>
+          {song?.he && (
+            <button
+              onClick={toggleLanguage}
+              className="inline-flex items-center gap-2 rounded-full glass-card px-3 py-1.5 text-xs font-medium hover:bg-white/5 transition"
+              dir={language === 'he' ? 'rtl' : 'ltr'}
+            >
+              <Languages className="h-3.5 w-3.5" />
+              {language === 'en' ? 'עברית' : 'English'}
+            </button>
+          )}
+        </div>
 
         {/* Hero */}
         <section className="grid gap-8 sm:grid-cols-[280px_1fr] sm:items-end animate-fade-in-up">
@@ -93,34 +116,34 @@ const Result = () => {
         </section>
 
         {/* One-line summary */}
-        <p className="mt-12 font-display text-2xl sm:text-3xl leading-snug text-foreground/95 animate-fade-in-up">
-          "{song.shortSummary}"
+        <p className="mt-12 font-display text-2xl sm:text-3xl leading-snug text-foreground/95 animate-fade-in-up" dir={language === 'he' ? 'rtl' : 'ltr'}>
+          "{content?.shortSummary}"
         </p>
 
         {/* The story */}
-        <section className="mt-10 glass-card rounded-3xl p-6 sm:p-8 animate-fade-in-up">
-          <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">The story</p>
+        <section className="mt-10 glass-card rounded-3xl p-6 sm:p-8 animate-fade-in-up" dir={language === 'he' ? 'rtl' : 'ltr'}>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">{language === 'he' ? 'הסיפור' : 'The story'}</p>
           <p className="mt-3 text-base sm:text-lg leading-relaxed text-foreground/90">
-            {song.storyExplanation}
+            {content?.storyExplanation}
           </p>
         </section>
 
         {/* Themes + tone */}
         <section className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="glass-card rounded-3xl p-6">
-            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Main themes</p>
+          <div className="glass-card rounded-3xl p-6" dir={language === 'he' ? 'rtl' : 'ltr'}>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">{language === 'he' ? 'נושאים מרכזיים' : 'Main themes'}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {song.themes.map((t) => (
+              {content?.themes.map((t) => (
                 <span key={t} className="rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs capitalize text-foreground/90">
                   {t}
                 </span>
               ))}
             </div>
           </div>
-          <div className="glass-card rounded-3xl p-6">
-            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Emotional tone</p>
+          <div className="glass-card rounded-3xl p-6" dir={language === 'he' ? 'rtl' : 'ltr'}>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">{language === 'he' ? 'גוון רגשי' : 'Emotional tone'}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {song.emotionalTone.map((t) => (
+              {content?.emotionalTone.map((t) => (
                 <span key={t} className={`rounded-full border border-white/10 bg-gradient-to-br ${toneColor(t)} px-3 py-1 text-xs capitalize text-foreground/95`}>
                   {t}
                 </span>
@@ -130,22 +153,22 @@ const Result = () => {
         </section>
 
         {/* Pull quote */}
-        <section className="my-12 relative">
+        <section className="my-12 relative" dir={language === 'he' ? 'rtl' : 'ltr'}>
           <div className="absolute -inset-x-6 -inset-y-4 rounded-[2rem] bg-gradient-brand-soft blur-2xl" aria-hidden />
           <blockquote className="relative font-display text-3xl sm:text-5xl leading-tight">
-            <span className="gradient-brand-text">"{song.memorableLine}"</span>
+            <span className="gradient-brand-text">"{content?.memorableLine}"</span>
           </blockquote>
         </section>
 
         {/* Why it hits + interpretation */}
         <section className="grid gap-4 sm:grid-cols-2">
-          <div className="glass-card rounded-3xl p-6">
-            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Why this song hits</p>
-            <p className="mt-3 text-base leading-relaxed text-foreground/90">{song.whyItConnects}</p>
+          <div className="glass-card rounded-3xl p-6" dir={language === 'he' ? 'rtl' : 'ltr'}>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">{language === 'he' ? 'למה השיר פוגע' : 'Why this song hits'}</p>
+            <p className="mt-3 text-base leading-relaxed text-foreground/90">{content?.whyItConnects}</p>
           </div>
-          <div className="glass-card rounded-3xl p-6">
-            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">Possible interpretation</p>
-            <p className="mt-3 text-base leading-relaxed text-foreground/90">{song.interpretation}</p>
+          <div className="glass-card rounded-3xl p-6" dir={language === 'he' ? 'rtl' : 'ltr'}>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">{language === 'he' ? 'פרשנות אפשרית' : 'Possible interpretation'}</p>
+            <p className="mt-3 text-base leading-relaxed text-foreground/90">{content?.interpretation}</p>
           </div>
         </section>
 

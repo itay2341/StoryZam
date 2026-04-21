@@ -15,4 +15,15 @@ export interface SongStory {
   whyItConnects: string;
   memorableLine: string;
   shareCardText: string;
+  // Hebrew translations
+  he?: {
+    shortSummary: string;
+    storyExplanation: string;
+    themes: string[];
+    emotionalTone: string[];
+    interpretation: string;
+    whyItConnects: string;
+    memorableLine: string;
+    shareCardText: string;
+  };
 }
