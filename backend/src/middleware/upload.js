@@ -18,6 +18,8 @@ const fileFilter = (req, file, cb) => {
     'audio/m4a',
     'audio/x-m4a',
     'audio/mp4',
+    'audio/webm',
+    'audio/webm;codecs=opus',
   ];
   
   if (allowedMimes.includes(file.mimetype)) {

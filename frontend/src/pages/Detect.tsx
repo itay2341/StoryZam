@@ -17,6 +17,8 @@ const Detect = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const timerRef = useRef<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const navigate = useNavigate();
 
   const startTimer = () => {
@@ -25,20 +27,60 @@ const Detect = () => {
   };
   const stopTimer = () => { if (timerRef.current) window.clearInterval(timerRef.current); };
 
-  const handleToggle = () => {
+  const handleToggle = async () => {
     if (recording) {
-      setRecording(false); stopTimer(); runAnalysis();
+      // Stop recording
+      setRecording(false);
+      stopTimer();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
     } else {
-      setRecording(true); startTimer();
+      // Start recording
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunksRef.current = [];
+        
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          stream.getTracks().forEach(track => track.stop());
+          runAnalysis(audioBlob);
+        };
+
+        mediaRecorder.start();
+        setRecording(true);
+        startTimer();
+      } catch (err) {
+        toast.error("Could not access microphone. Please check permissions.");
+        console.error("Microphone access error:", err);
+      }
     }
   };
 
-  const handleCancel = () => { setRecording(false); stopTimer(); setSeconds(0); };
+  const handleCancel = () => {
+    setRecording(false);
+    stopTimer();
+    setSeconds(0);
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+    audioChunksRef.current = [];
+  };
 
-  const runAnalysis = async () => {
+  const runAnalysis = async (audioBlob: Blob) => {
     setAnalyzing(true);
     try {
-      const recognized = await recognizeSong();
+      const recognized = await recognizeSong(audioBlob);
       // Try Gemini analysis; fall back to mock content if unavailable.
       try {
         const story = await analyzeSongMeaning(recognized);
@@ -59,8 +101,9 @@ const Detect = () => {
   };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
-    runAnalysis();
+    const file = e.target.files?.[0];
+    if (!file) return;
+    runAnalysis(file);
   };
 
   const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
