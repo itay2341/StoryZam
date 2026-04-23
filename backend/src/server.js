@@ -64,7 +64,7 @@ app.use((req, res) => {
 
 // Start server
 const PORT = config.port;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Storyzam API server running on port ${PORT}`);
   console.log(`📍 Health check: http://localhost:${PORT}/health`);
   console.log(`🎵 Song recognition: http://localhost:${PORT}/api/songs/recognize`);
